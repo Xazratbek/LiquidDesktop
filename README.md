@@ -8,6 +8,8 @@ Built natively for macOS with Swift, Metal, ScreenCaptureKit, and SwiftUI.
 
 ![Liquid Desktop website preview](site/assets/og.jpg)
 
+**Live website:** [liquid-desktop-bgj.pages.dev](https://liquid-desktop-bgj.pages.dev/)
+
 ## Highlights
 
 - Real-time fluid simulation driven by MacBook lid angle and pointer movement
@@ -73,6 +75,9 @@ npx wrangler deploy
 The deploy uses `wrangler.jsonc` and publishes `site/` as Workers static
 assets. The live website is designed to work without JavaScript frameworks or a
 build step.
+
+The current Cloudflare Pages deployment is available at
+[liquid-desktop-bgj.pages.dev](https://liquid-desktop-bgj.pages.dev/).
 
 ## Website motion system
 
