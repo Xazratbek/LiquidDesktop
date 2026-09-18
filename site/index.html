@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liquid Desktop: your desktop, underwater</title>
+<meta name="description" content="Real water physics on your Mac. Tilt your MacBook's lid and the water flows, rock it and it splashes. One-time purchase, direct download.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Liquid Desktop">
+<meta property="og:description" content="Real water physics on your Mac. Tilt the lid and it flows, rock it and it splashes.">
+<meta property="og:image" content="assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/icon-512.png">
+<link rel="preload" as="image" href="assets/hero-poster.jpg">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #eaedf1;
+    --text: #0e1116;
+    --muted: #5c6470;
+    --line: rgba(14, 17, 22, 0.09);
+    --accent: #0a66f2;
+    --plate: #071318;
+    --radius: 20px;
+    --max: 1240px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10;
+      --surface: #14171c;
+      --surface-2: #1a1e24;
+      --text: #eef1f5;
+      --muted: #98a1ad;
+      --line: rgba(255, 255, 255, 0.08);
+      --accent: #4a90ff;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 17px/1.55 var(--font);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+  img, video { display: block; max-width: 100%; }
+  h1, h2, h3, p { margin: 0; }
+  .container { width: min(var(--max), 100% - 48px); margin-inline: auto; }
+
+  /* Navigation */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid transparent;
+    transition: border-color .3s ease;
+  }
+  .nav.scrolled { border-bottom-color: var(--line); }
+  .nav .container { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .wordmark { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+  .wordmark img { width: 28px; height: 28px; }
+  .nav-links { display: flex; align-items: center; gap: 32px; font-size: 14px; color: var(--muted); }
+  .nav-links a:not(.button):hover { color: var(--text); }
+
+  /* Buttons */
+  .button {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 48px; padding: 0 22px; border-radius: 999px;
+    font: 600 15px/1 var(--font); letter-spacing: -0.005em; white-space: nowrap;
+    transition: transform .2s var(--ease), background-color .2s ease, color .2s ease;
+  }
+  .button:active { transform: scale(0.98); }
+  .button-primary { background: var(--text); color: var(--bg); }
+  .button-primary:hover { background: color-mix(in srgb, var(--text) 86%, var(--accent)); }
+  .button-secondary { color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+  .button-secondary:hover { background: var(--surface-2); }
+  .button-small { height: 36px; padding: 0 16px; font-size: 14px; }
+
+  /* Hero */
+  .hero { padding: 72px 0 0; }
+  .hero-grid { display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 24px; align-items: end; }
+  .hero h1 {
+    grid-column: 1 / 9;
+    font-size: clamp(56px, 8.4vw, 120px); line-height: 0.95; font-weight: 700; letter-spacing: -0.048em;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero-aside { grid-column: 9 / 13; padding-bottom: 10px; }
+  .hero-aside p { font-size: 19px; line-height: 1.5; color: var(--muted); max-width: 32ch; }
+  .hero-actions { margin-top: 28px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero-plate {
+    position: relative; margin-top: 56px; border-radius: 28px; overflow: hidden;
+    aspect-ratio: 16 / 9; background: var(--plate);
+  }
+  .hero-plate video { width: 100%; height: 100%; object-fit: cover; }
+
+  section { padding: 144px 0 0; }
+  .section-title { font-size: clamp(38px, 5vw, 64px); line-height: 1.02; font-weight: 700; letter-spacing: -0.04em; }
+  .section-lede { margin-top: 18px; font-size: 19px; color: var(--muted); max-width: 52ch; }
+
+  /* Controller: sticky phone + stacked beats */
+  .controller { display: grid; grid-template-columns: 5fr 7fr; gap: 80px; margin-top: 72px; }
+  .controller-media { position: sticky; top: calc(50vh - min(340px, 50vh - 90px)); align-self: start; }
+  .device {
+    height: min(680px, 100vh - 180px); aspect-ratio: 9 / 19.5; margin-inline: auto; max-width: 100%;
+    border-radius: 56px; padding: 11px; background: #111418;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset, 0 40px 80px -40px rgba(8, 20, 40, 0.45);
+  }
+  .device video { width: 100%; height: 100%; object-fit: cover; border-radius: 46px; background: var(--plate); }
+  .beats { padding: 12vh 0 18vh; }
+  .beat { min-height: 52vh; display: flex; flex-direction: column; justify-content: center; opacity: .28; transition: opacity .6s var(--ease); }
+  .beat.active { opacity: 1; }
+  .beat h3 { font-size: clamp(64px, 8vw, 104px); line-height: 0.95; font-weight: 700; letter-spacing: -0.05em; }
+  .beat p { margin-top: 20px; font-size: 21px; line-height: 1.5; color: var(--muted); max-width: 30ch; }
+
+  /* Liquids: horizontal snap gallery */
+  .gallery-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+  .gallery-nav { display: flex; gap: 8px; }
+  .round {
+    width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--surface-2); color: var(--text); font: 500 20px/1 var(--font);
+    display: grid; place-items: center; transition: transform .2s var(--ease), background-color .2s ease;
+  }
+  .round:hover { background: color-mix(in srgb, var(--surface-2) 80%, var(--text)); }
+  .round:active { transform: scale(0.94); }
+  .gallery {
+    margin-top: 48px; display: grid; grid-auto-flow: column; grid-auto-columns: min(560px, 82vw); gap: 20px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    padding-inline: max(24px, calc((100vw - var(--max)) / 2)); scroll-padding-inline: max(24px, calc((100vw - var(--max)) / 2));
+  }
+  .gallery::-webkit-scrollbar { display: none; }
+  .liquid { scroll-snap-align: start; }
+  .liquid video { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius); background: var(--plate); }
+  .liquid h3 { margin-top: 18px; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .liquid p { margin-top: 4px; color: var(--muted); }
+
+  /* Details: bento */
+  .bento { margin-top: 56px; display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: minmax(260px, auto); gap: 16px; }
+  .tile { border-radius: var(--radius); background: var(--surface); overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 0 1px var(--line); }
+  .tile-copy { padding: 30px 32px; }
+  .tile h3 { font-size: 24px; line-height: 1.15; font-weight: 600; letter-spacing: -0.025em; }
+  .tile p { margin-top: 8px; color: var(--muted); max-width: 40ch; }
+  .tile-refraction { grid-column: 1 / 5; grid-row: 1 / 3; }
+  .tile-refraction img { flex: 1; width: 100%; min-height: 0; object-fit: cover; object-position: 30% 40%; }
+  .tile-private { grid-column: 5 / 7; background: var(--accent); color: #fff; box-shadow: none; }
+  .tile-private p { color: rgba(255, 255, 255, 0.82); }
+  .tile-private .glyph { margin: auto 32px 30px; font-size: 64px; line-height: 1; font-weight: 700; letter-spacing: -0.04em; }
+  .tile-battery { grid-column: 5 / 7; justify-content: space-between; }
+  .meter { margin: 0 32px 32px; height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 12%; border-radius: inherit; background: var(--text); transition: width 1.6s var(--ease); }
+  .tile-battery.in .meter span { width: 88%; }
+  .tile-menu { grid-column: 1 / 4; background: #0f1216; color: #eef1f5; box-shadow: none; }
+  .tile-menu p { color: #98a1ad; }
+  .tile-menu img { width: 72%; margin: 6px auto -40px; border-radius: 18px 18px 0 0; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6); }
+  .tile-keys { grid-column: 4 / 7; justify-content: space-between; background: var(--surface-2); box-shadow: none; }
+  .keys { display: flex; gap: 10px; margin: 0 32px 36px; }
+  .key {
+    min-width: 64px; height: 64px; padding: 0 14px; border-radius: 14px; display: grid; place-items: center;
+    font: 600 26px/1 var(--font); background: var(--surface); box-shadow: 0 1px 0 var(--line), 0 6px 0 -2px var(--line), inset 0 0 0 1px var(--line);
+  }
+
+  /* Pricing */
+  .pricing { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; align-items: end; padding-top: 48px; border-top: 1px solid var(--line); }
+  .price { grid-column: 1 / 7; font-size: clamp(96px, 14vw, 200px); line-height: 0.85; font-weight: 700; letter-spacing: -0.06em; }
+  .pricing-copy { grid-column: 7 / 13; }
+  .pricing-copy h2 { font-size: 32px; line-height: 1.15; font-weight: 600; letter-spacing: -0.025em; }
+  .pricing-copy p { margin-top: 12px; color: var(--muted); max-width: 44ch; }
+  .facts { margin: 28px 0 32px; display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 8px 32px; font-size: 15px; }
+  .facts span { color: var(--muted); display: block; font-size: 13px; }
+  .note { margin-top: 16px; font-size: 14px; color: var(--muted); }
+
+  /* FAQ */
+  .faq { display: grid; grid-template-columns: 4fr 8fr; gap: 64px; }
+  .faq-list { border-top: 1px solid var(--line); }
+  details { border-bottom: 1px solid var(--line); }
+  summary {
+    list-style: none; cursor: pointer; padding: 24px 0; display: flex; justify-content: space-between; gap: 24px;
+    font-size: 19px; font-weight: 600; letter-spacing: -0.015em;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-weight: 400; font-size: 24px; line-height: 1; color: var(--muted); transition: transform .3s var(--ease); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { padding: 0 48px 26px 0; color: var(--muted); }
+
+  /* Closing */
+  .closing { padding: 176px 0 136px; text-align: center; }
+  .closing img { width: 120px; height: 120px; margin: 0 auto 32px; }
+  .closing h2 { font-size: clamp(44px, 6.4vw, 88px); line-height: 1; font-weight: 700; letter-spacing: -0.045em; }
+  .closing .button { margin-top: 36px; }
+
+  footer { border-top: 1px solid var(--line); }
+  footer .container { display: flex; justify-content: space-between; gap: 16px; padding: 28px 0 40px; font-size: 14px; color: var(--muted); }
+  footer nav { display: flex; gap: 24px; }
+  footer a:hover { color: var(--text); }
+
+  /* Reveal */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .beat { opacity: 1; }
+    .meter span { transition: none; }
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .hero h1 { grid-column: 1 / -1; }
+    .hero-aside { grid-column: 1 / -1; margin-top: 28px; }
+    .controller { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .bento { grid-template-columns: repeat(2, 1fr); }
+    .tile-refraction { grid-column: 1 / -1; grid-row: auto; min-height: 460px; }
+    .tile-private, .tile-battery { grid-column: auto; }
+    .tile-menu, .tile-keys { grid-column: 1 / -1; }
+    .price, .pricing-copy { grid-column: 1 / -1; }
+    .faq { grid-template-columns: 1fr; gap: 32px; }
+  }
+
+  /* Phone */
+  @media (max-width: 767px) {
+    body { font-size: 16px; }
+    .container { width: calc(100% - 40px); }
+    .nav-links a:not(.button) { display: none; }
+    .hero { padding-top: 40px; }
+    .hero h1 { font-size: clamp(52px, 15vw, 72px); }
+    .hero-aside p { font-size: 18px; }
+    .hero-actions .button { flex: 1; }
+    .hero-plate { margin-top: 36px; border-radius: 18px; }
+    section { padding-top: 104px; }
+    .controller { grid-template-columns: 1fr; gap: 0; }
+    .controller-media { position: relative; top: 0; }
+    .device { height: auto; width: 260px; border-radius: 42px; padding: 9px; }
+    .device video { border-radius: 34px; }
+    .beats { padding: 48px 0 0; }
+    .beat { min-height: 0; padding: 22px 0; opacity: 1; }
+    .beat h3 { font-size: 56px; }
+    .beat p { font-size: 18px; margin-top: 10px; }
+    .gallery-nav { display: none; }
+    .gallery { grid-auto-columns: 84vw; margin-top: 32px; padding-inline: 20px; scroll-padding-inline: 20px; }
+    .bento { grid-template-columns: 1fr; grid-auto-rows: auto; }
+    .tile-refraction { min-height: 0; }
+    .tile-refraction img { height: 260px; flex: none; }
+    .tile-private .glyph, .tile-battery .meter { margin-top: 12px; }
+    .tile-menu img { width: 86%; }
+    .keys { flex-wrap: wrap; }
+    .key { min-width: 52px; height: 52px; font-size: 22px; }
+    .facts { grid-template-columns: 1fr 1fr; }
+    .closing { padding: 128px 0 104px; }
+    .closing img { width: 96px; height: 96px; }
+    footer .container { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="container">
+    <a class="wordmark" href="#top"><img src="assets/icon-512.png" alt="">Liquid Desktop</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#controller">How it works</a>
+      <a href="#liquids">Liquids</a>
+      <a href="#faq">FAQ</a>
+      <a class="button button-primary button-small buy" href="#pricing">Buy for $2.99</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero container">
+    <div class="hero-grid">
+      <h1>Your desktop, <em>underwater.</em></h1>
+      <div class="hero-aside">
+        <p>Real water physics on your Mac. Tilt the lid and it flows, rock it and it splashes.</p>
+        <div class="hero-actions">
+          <a class="button button-primary buy" href="#pricing">Buy for $2.99</a>
+          <a class="button button-secondary" href="#controller">See how it works</a>
+        </div>
+      </div>
+    </div>
+    <div class="hero-plate reveal">
+      <video autoplay muted loop playsinline preload="auto" poster="assets/hero-poster.jpg"
+             aria-label="A MacBook screen filling with water as the lid tilts back, then splashing as it rocks">
+        <source src="assets/hero.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div>
+
+  <section id="controller" class="container">
+    <h2 class="section-title reveal">Your MacBook is the controller.</h2>
+    <div class="controller">
+      <div class="controller-media">
+        <div class="device">
+          <video muted loop playsinline preload="none" poster="assets/reel-poster.jpg" data-lazy
+                 aria-label="Vertical demo: tilting, rocking and switching liquids">
+            <source src="assets/reel.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+      <div class="beats">
+        <div class="beat">
+          <h3>Tilt.</h3>
+          <p>Lean the screen back and the water climbs the glass. Bring it upright and it settles into a pool.</p>
+        </div>
+        <div class="beat">
+          <h3>Rock.</h3>
+          <p>Wiggle the lid and waves slosh from side to side. Flick it and droplets leap off the surface.</p>
+        </div>
+        <div class="beat">
+          <h3>Stir.</h3>
+          <p>Drag the pointer through the water to leave a wake. Everything underneath still clicks.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="liquids">
+    <div class="container gallery-head">
+      <div class="reveal">
+        <h2 class="section-title">Four liquids.</h2>
+        <p class="section-lede">Clear water, lagoon, mercury and lava. Switch between them from the menu bar.</p>
+      </div>
+      <div class="gallery-nav">
+        <button class="round" type="button" data-scroll="-1" aria-label="Previous liquid">&#8592;</button>
+        <button class="round" type="button" data-scroll="1" aria-label="Next liquid">&#8594;</button>
+      </div>
+    </div>
+    <div class="gallery" id="gallery">
+      <article class="liquid">
+        <video muted loop playsinline preload="none" poster="assets/theme-clear.jpg" data-lazy aria-label="Clear Water"><source src="assets/theme-clear.mp4" type="video/mp4"></video>
+        <h3>Clear Water</h3>
+        <p>Glass-clear, with light dancing underneath.</p>
+      </article>
+      <article class="liquid">
+        <video muted loop playsinline preload="none" poster="assets/theme-lagoon.jpg" data-lazy aria-label="Lagoon"><source src="assets/theme-lagoon.mp4" type="video/mp4"></video>
+        <h3>Lagoon</h3>
+        <p>Bright tropical turquoise.</p>
+      </article>
+      <article class="liquid">
+        <video muted loop playsinline preload="none" poster="assets/theme-mercury.jpg" data-lazy aria-label="Mercury"><source src="assets/theme-mercury.mp4" type="video/mp4"></video>
+        <h3>Mercury</h3>
+        <p>Heavy liquid chrome that mirrors your screen.</p>
+      </article>
+      <article class="liquid">
+        <video muted loop playsinline preload="none" poster="assets/theme-lava.jpg" data-lazy aria-label="Lava"><source src="assets/theme-lava.mp4" type="video/mp4"></video>
+        <h3>Lava</h3>
+        <p>Slow glowing magma under a cracked crust.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="details" class="container">
+    <h2 class="section-title reveal">Built with care.</h2>
+    <div class="bento">
+      <article class="tile tile-refraction reveal">
+        <div class="tile-copy">
+          <h3>It bends what's underneath.</h3>
+          <p>Windows, text and icons refract through the surface like a real glass tank.</p>
+        </div>
+        <img src="assets/detail-refraction.jpg" alt="Close-up of text refracting through the water surface" loading="lazy">
+      </article>
+      <article class="tile tile-private reveal">
+        <div class="tile-copy">
+          <h3>Private by design.</h3>
+          <p>Screen frames go to the GPU and are thrown away. Nothing is recorded or sent.</p>
+        </div>
+        <div class="glyph">0 bytes</div>
+      </article>
+      <article class="tile tile-battery reveal">
+        <div class="tile-copy">
+          <h3>Easy on battery.</h3>
+          <p>When the water settles, the simulation sleeps.</p>
+        </div>
+        <div class="meter" aria-hidden="true"><span></span></div>
+      </article>
+      <article class="tile tile-menu reveal">
+        <div class="tile-copy">
+          <h3>Lives in your menu bar.</h3>
+          <p>Fill, drain, splash and switch liquids from one small drop.</p>
+        </div>
+        <img src="assets/menu-panel.png" alt="The Liquid Desktop menu bar panel" loading="lazy">
+      </article>
+      <article class="tile tile-keys reveal">
+        <div class="tile-copy">
+          <h3>Gone in a keystroke.</h3>
+          <p>Drain or refill the water from any app, whenever you need your screen back.</p>
+        </div>
+        <div class="keys" aria-label="Control Option Command L">
+          <span class="key">&#8963;</span><span class="key">&#8997;</span><span class="key">&#8984;</span><span class="key">L</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="pricing" class="container">
+    <div class="pricing reveal">
+      <div class="price">$2.99</div>
+      <div class="pricing-copy">
+        <h2>Pay once. Download. Done.</h2>
+        <p>No subscription and no account. After checkout you get a direct download link for the app.</p>
+        <div class="facts">
+          <div><span>Includes</span>All four liquids</div>
+          <div><span>Runs on</span>Apple silicon and Intel</div>
+          <div><span>Requires</span>macOS 14 or later</div>
+        </div>
+        <a class="button button-primary buy" href="#pricing">Buy for $2.99</a>
+        <p class="note">Lid tilt needs a MacBook with a lid angle sensor.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="container">
+    <div class="faq">
+      <h2 class="section-title reveal">Questions.</h2>
+      <div class="faq-list reveal">
+        <details>
+          <summary>How do I get the app after buying?</summary>
+          <p>Right after checkout you receive a download link by email. Open the DMG, drag Liquid Desktop into Applications and launch it. It appears as a drop in your menu bar.</p>
+        </details>
+        <details>
+          <summary>Which Macs does it work on?</summary>
+          <p>Any Mac on macOS 14 Sonoma or later. Following the lid needs a MacBook that reports its lid angle. Without one, the water still flows, stirs under your pointer and splashes on a shortcut.</p>
+        </details>
+        <details>
+          <summary>Why does it ask for Screen Recording?</summary>
+          <p>To bend what's underneath, the app needs a live image of your screen, and macOS calls that Screen Recording. Each frame is used on the graphics card and discarded. Nothing is saved or sent. You can decline, and the water is drawn without refraction.</p>
+        </details>
+        <details>
+          <summary>Can I keep working while the water is showing?</summary>
+          <p>Yes. The water ignores clicks, so everything underneath works as usual. Press Control Option Command L to drain it.</p>
+        </details>
+        <details>
+          <summary>Is it a subscription?</summary>
+          <p>No. You pay once and keep it.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing container">
+    <img class="reveal" src="assets/icon-512.png" alt="Liquid Desktop app icon" loading="lazy">
+    <h2 class="reveal">Make your desktop splash.</h2>
+    <a class="button button-primary buy reveal" href="#pricing">Buy for $2.99</a>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <span>&copy; 2026 Liquid Desktop</span>
+    <nav aria-label="Footer">
+      <a href="privacy.html">Privacy</a>
+      <a href="#" id="support-link">Support</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  // Paste the checkout link (Lemon Squeezy, Gumroad, Paddle) and a support
+  // address here. Until then, buy buttons jump to the pricing section.
+  const CHECKOUT_URL = "";
+  const SUPPORT_EMAIL = "";
+
+  if (CHECKOUT_URL) document.querySelectorAll(".buy").forEach((a) => { a.href = CHECKOUT_URL; });
+  const support = document.getElementById("support-link");
+  if (SUPPORT_EMAIL) support.href = "mailto:" + SUPPORT_EMAIL; else support.hidden = true;
+
+  const nav = document.getElementById("nav");
+  new IntersectionObserver(([entry]) => nav.classList.toggle("scrolled", !entry.isIntersecting))
+    .observe(document.querySelector(".hero h1"));
+
+  const reveal = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("in");
+      reveal.unobserve(entry.target);
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".reveal").forEach((el) => reveal.observe(el));
+
+  // Highlight the beat that is centred in the viewport.
+  const beatObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => entry.target.classList.toggle("active", entry.isIntersecting));
+  }, { rootMargin: "-42% 0px -42% 0px" });
+  document.querySelectorAll(".beat").forEach((beat) => beatObserver.observe(beat));
+
+  // Below-the-fold videos download and play only while on screen.
+  const lazy = new IntersectionObserver((entries) => {
+    entries.forEach(({ target: video, isIntersecting }) => {
+      if (isIntersecting) {
+        if (video.preload === "none") { video.preload = "auto"; video.load(); }
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll("video[data-lazy]").forEach((v) => lazy.observe(v));
+
+  const gallery = document.getElementById("gallery");
+  document.querySelectorAll("[data-scroll]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const step = gallery.querySelector(".liquid").offsetWidth + 20;
+      gallery.scrollBy({ left: step * Number(button.dataset.scroll), behavior: "smooth" });
+    });
+  });
+</script>
+</body>
+</html>

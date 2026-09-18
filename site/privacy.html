@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy: Liquid Desktop</title>
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<style>
+  :root { --bg: #f5f6f8; --text: #0e1116; --muted: #5c6470; --line: rgba(14, 17, 22, 0.09); --accent: #0a66f2;
+          --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, sans-serif; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b0d10; --text: #eef1f5; --muted: #98a1ad; --line: rgba(255, 255, 255, 0.08); --accent: #4a90ff; } }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 var(--font); -webkit-font-smoothing: antialiased; }
+  main { width: min(680px, 100% - 40px); margin: 0 auto; padding: 40px 0 120px; }
+  a { color: var(--accent); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 600; font-size: 16px; }
+  .brand img { width: 28px; height: 28px; }
+  h1 { font-size: clamp(44px, 7vw, 64px); line-height: 1; font-weight: 700; letter-spacing: -0.04em; margin: 72px 0 12px; }
+  h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 48px 0 10px; padding-top: 28px; border-top: 1px solid var(--line); }
+  p, li { color: var(--muted); }
+  li { margin-bottom: 10px; }
+  strong { color: var(--text); font-weight: 600; }
+  .updated { font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="index.html"><img src="assets/icon-512.png" alt="">Liquid Desktop</a>
+  <h1>Privacy</h1>
+  <p class="updated">Last updated September 2026</p>
+
+  <h2>The app</h2>
+  <p>Liquid Desktop does not collect, store or transmit any personal data. It has no accounts, no analytics and no tracking.</p>
+  <ul>
+    <li><strong>Screen image.</strong> If you grant Screen Recording permission, the app reads a live image of your display so the water can refract what is underneath. Each frame is uploaded to your graphics card, used to draw that frame, and discarded. Frames are never written to disk or sent over the network, and they are released whenever the water is drained or the screen is locked.</li>
+    <li><strong>Lid angle and pointer.</strong> The lid angle sensor and pointer position are read on your Mac only to move the water.</li>
+    <li><strong>Preferences.</strong> Your settings are stored locally in macOS preferences.</li>
+  </ul>
+
+  <h2>This website</h2>
+  <p>This site does not use cookies or analytics. When you buy, checkout is handled by our payment provider, which processes your payment and email address under its own privacy policy.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about privacy: <a href="index.html#faq">see the FAQ</a> or contact support from the link at the bottom of the home page.</p>
+</main>
+</body>
+</html>
