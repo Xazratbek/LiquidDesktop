@@ -3,7 +3,7 @@
 This directory contains the public-facing Liquid Desktop website. It is a
 dependency-free static site designed for Cloudflare Workers static assets.
 
-Live deployment: [liquid-desktop-bgj.pages.dev](https://liquid-desktop-bgj.pages.dev/)
+Live deployment: [liquid-desktop-xazratbek.pages.dev](https://liquid-desktop-xazratbek.pages.dev/)
 
 ## Local preview
 
